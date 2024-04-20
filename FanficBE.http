@@ -1,0 +1,6 @@
+@FanficBE_HostAddress = http://localhost:5008
+
+GET {{FanficBE_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
