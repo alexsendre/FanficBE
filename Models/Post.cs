@@ -9,5 +9,6 @@
         public int CategoryId { get; set; }
         public ICollection<Category> Categories { get; set; }
         public ICollection<User> Users { get; set; }
+        public ICollection<Comment> Comments { get; set; }
     }
 }
