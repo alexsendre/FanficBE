@@ -40,6 +40,14 @@ namespace FanficBE
                 new Category { Id = 3, Label = "category three" },
                 new Category { Id = 4, Label = "category four" }
             });
+
+            modelBuilder.Entity<Comment>().HasData(new Comment[]
+            {
+                new Comment { Id = 1, AuthorId = 4, PostId = 1, Content = "this is a comment!" },
+                new Comment { Id = 2, AuthorId = 3, PostId = 2, Content = "comment 2!" },
+                new Comment { Id = 3, AuthorId = 2, PostId = 3, Content = "a new comment, totally new" },
+                new Comment { Id = 4, AuthorId = 1, PostId = 1, Content = "this is also a comment" },
+            });
         }
     }
 }
