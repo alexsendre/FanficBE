@@ -4,7 +4,10 @@
     {
         public static void Map(WebApplication app)
         {
-            // requests go here (delete this comment when starting)
+            app.MapGet("/categories", (FanficBEDbContext db) =>
+            {
+                return db.Categories.ToList();
+            });
         }
     }
 }

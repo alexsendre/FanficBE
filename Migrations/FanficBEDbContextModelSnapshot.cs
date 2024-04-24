@@ -37,21 +37,6 @@ namespace FanficBE.Migrations
                     b.ToTable("CategoryPost");
                 });
 
-            modelBuilder.Entity("CommentPost", b =>
-                {
-                    b.Property<int>("CommentsId")
-                        .HasColumnType("integer");
-
-                    b.Property<int>("PostsId")
-                        .HasColumnType("integer");
-
-                    b.HasKey("CommentsId", "PostsId");
-
-                    b.HasIndex("PostsId");
-
-                    b.ToTable("CommentPost");
-                });
-
             modelBuilder.Entity("FanficBE.Models.Category", b =>
                 {
                     b.Property<int>("Id")
@@ -99,48 +84,59 @@ namespace FanficBE.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
-                    b.Property<int>("AuthorId")
-                        .HasColumnType("integer");
-
                     b.Property<string>("Content")
                         .IsRequired()
                         .HasColumnType("text");
 
+                    b.Property<DateTime>("CreatedOn")
+                        .HasColumnType("timestamp without time zone");
+
                     b.Property<int>("PostId")
                         .HasColumnType("integer");
 
+                    b.Property<int>("UserId")
+                        .HasColumnType("integer");
+
                     b.HasKey("Id");
+
+                    b.HasIndex("PostId");
+
+                    b.HasIndex("UserId");
 
                     b.ToTable("Comments");
 
                     b.HasData(
                         new
                         {
-                            Id = 1,
-                            AuthorId = 4,
-                            Content = "this is a comment!",
-                            PostId = 1
-                        },
-                        new
-                        {
                             Id = 2,
-                            AuthorId = 3,
                             Content = "comment 2!",
-                            PostId = 2
+                            CreatedOn = new DateTime(2024, 4, 23, 20, 16, 52, 469, DateTimeKind.Local).AddTicks(1856),
+                            PostId = 2,
+                            UserId = 3
                         },
                         new
                         {
                             Id = 3,
-                            AuthorId = 2,
                             Content = "a new comment, totally new",
-                            PostId = 3
+                            CreatedOn = new DateTime(2024, 4, 23, 20, 16, 52, 469, DateTimeKind.Local).AddTicks(1858),
+                            PostId = 3,
+                            UserId = 2
                         },
                         new
                         {
                             Id = 4,
-                            AuthorId = 1,
                             Content = "this is also a comment",
-                            PostId = 1
+                            CreatedOn = new DateTime(2024, 4, 23, 20, 16, 52, 469, DateTimeKind.Local).AddTicks(1860),
+                            PostId = 1,
+                            UserId = 1
+                        },
+                        new
+                        {
+                            Id = 1,
+                            Content = "this is a comment!",
+                            CreatedOn = new DateTime(2024, 4, 23, 20, 16, 52, 469, DateTimeKind.Local).AddTicks(1862),
+                            PostId = 1,
+                            UserId = 4
                         });
                 });
 
@@ -217,9 +213,6 @@ namespace FanficBE.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<int?>("CommentId")
-                        .HasColumnType("integer");
-
                     b.Property<DateTime>("CreatedOn")
                         .HasColumnType("timestamp without time zone");
 
@@ -251,8 +244,6 @@ namespace FanficBE.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("CommentId");
-
                     b.HasIndex("PostId");
 
                     b.ToTable("Users");
@@ -262,7 +253,7 @@ namespace FanficBE.Migrations
                         {
                             Id = 1,
                             Bio = "Bio of user 1",
-                            CreatedOn = new DateTime(2024, 4, 23, 16, 50, 34, 775, DateTimeKind.Local).AddTicks(1602),
+                            CreatedOn = new DateTime(2024, 4, 23, 20, 16, 52, 469, DateTimeKind.Local).AddTicks(1474),
                             Email = "john@example.com",
                             FirstName = "John",
                             Image = "image1.jpg",
@@ -274,7 +265,7 @@ namespace FanficBE.Migrations
                         {
                             Id = 2,
                             Bio = "Bio of user 2",
-                            CreatedOn = new DateTime(2024, 4, 23, 16, 50, 34, 775, DateTimeKind.Local).AddTicks(1652),
+                            CreatedOn = new DateTime(2024, 4, 23, 20, 16, 52, 469, DateTimeKind.Local).AddTicks(1561),
                             Email = "jane@example.com",
                             FirstName = "Jane",
                             Image = "image2.jpg",
@@ -286,7 +277,7 @@ namespace FanficBE.Migrations
                         {
                             Id = 3,
                             Bio = "Bio of user 3",
-                            CreatedOn = new DateTime(2024, 4, 23, 16, 50, 34, 775, DateTimeKind.Local).AddTicks(1655),
+                            CreatedOn = new DateTime(2024, 4, 23, 20, 16, 52, 469, DateTimeKind.Local).AddTicks(1563),
                             Email = "alex@example.com",
                             FirstName = "Alex",
                             Image = "image3.jpg",
@@ -298,7 +289,7 @@ namespace FanficBE.Migrations
                         {
                             Id = 4,
                             Bio = "Bio of user 4",
-                            CreatedOn = new DateTime(2024, 4, 23, 16, 50, 34, 775, DateTimeKind.Local).AddTicks(1657),
+                            CreatedOn = new DateTime(2024, 4, 23, 20, 16, 52, 469, DateTimeKind.Local).AddTicks(1565),
                             Email = "emily@example.com",
                             FirstName = "Emily",
                             Image = "image4.jpg",
@@ -323,39 +314,36 @@ namespace FanficBE.Migrations
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("CommentPost", b =>
+            modelBuilder.Entity("FanficBE.Models.Comment", b =>
                 {
-                    b.HasOne("FanficBE.Models.Comment", null)
-                        .WithMany()
-                        .HasForeignKey("CommentsId")
+                    b.HasOne("FanficBE.Models.Post", "Post")
+                        .WithMany("Comments")
+                        .HasForeignKey("PostId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("FanficBE.Models.Post", null)
+                    b.HasOne("FanficBE.Models.User", "User")
                         .WithMany()
-                        .HasForeignKey("PostsId")
+                        .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.Navigation("Post");
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("FanficBE.Models.User", b =>
                 {
-                    b.HasOne("FanficBE.Models.Comment", null)
-                        .WithMany("Users")
-                        .HasForeignKey("CommentId");
-
                     b.HasOne("FanficBE.Models.Post", null)
                         .WithMany("Users")
                         .HasForeignKey("PostId");
                 });
 
-            modelBuilder.Entity("FanficBE.Models.Comment", b =>
-                {
-                    b.Navigation("Users");
-                });
-
             modelBuilder.Entity("FanficBE.Models.Post", b =>
                 {
+                    b.Navigation("Comments");
+
                     b.Navigation("Users");
                 });
 #pragma warning restore 612, 618
