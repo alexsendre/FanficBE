@@ -8,6 +8,11 @@
             {
                 return db.Categories.ToList();
             });
+
+            app.MapGet("/categories/{id}", (FanficBEDbContext db, int id) =>
+            {
+                return db.Categories.SingleOrDefault(c => c.Id == id);
+            });
         }
     }
 }
