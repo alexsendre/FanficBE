@@ -16,26 +16,11 @@ namespace FanficBE.Migrations
                 {
                     Id = table.Column<int>(type: "integer", nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
-                    Label = table.Column<string>(type: "text", nullable: false)
+                    Label = table.Column<string>(type: "text", nullable: true)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Categories", x => x.Id);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "Comments",
-                columns: table => new
-                {
-                    Id = table.Column<int>(type: "integer", nullable: false)
-                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
-                    AuthorId = table.Column<int>(type: "integer", nullable: false),
-                    PostId = table.Column<int>(type: "integer", nullable: false),
-                    Content = table.Column<string>(type: "text", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_Comments", x => x.Id);
                 });
 
             migrationBuilder.CreateTable(
@@ -47,17 +32,11 @@ namespace FanficBE.Migrations
                     UserId = table.Column<int>(type: "integer", nullable: false),
                     Title = table.Column<string>(type: "text", nullable: false),
                     Content = table.Column<string>(type: "text", nullable: false),
-                    CategoryId = table.Column<int>(type: "integer", nullable: false),
-                    CommentId = table.Column<int>(type: "integer", nullable: true)
+                    CategoryId = table.Column<int>(type: "integer", nullable: false)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Posts", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_Posts_Comments_CommentId",
-                        column: x => x.CommentId,
-                        principalTable: "Comments",
-                        principalColumn: "Id");
                 });
 
             migrationBuilder.CreateTable(
@@ -98,22 +77,44 @@ namespace FanficBE.Migrations
                     CreatedOn = table.Column<DateTime>(type: "timestamp without time zone", nullable: false),
                     Staff = table.Column<bool>(type: "boolean", nullable: false),
                     Uid = table.Column<string>(type: "text", nullable: false),
-                    CommentId = table.Column<int>(type: "integer", nullable: true),
                     PostId = table.Column<int>(type: "integer", nullable: true)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Users", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_Users_Comments_CommentId",
-                        column: x => x.CommentId,
-                        principalTable: "Comments",
-                        principalColumn: "Id");
-                    table.ForeignKey(
                         name: "FK_Users_Posts_PostId",
                         column: x => x.PostId,
                         principalTable: "Posts",
                         principalColumn: "Id");
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Comments",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    UserId = table.Column<int>(type: "integer", nullable: false),
+                    PostId = table.Column<int>(type: "integer", nullable: false),
+                    Content = table.Column<string>(type: "text", nullable: false),
+                    CreatedOn = table.Column<DateTime>(type: "timestamp without time zone", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Comments", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_Comments_Posts_PostId",
+                        column: x => x.PostId,
+                        principalTable: "Posts",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_Comments_Users_UserId",
+                        column: x => x.UserId,
+                        principalTable: "Users",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.InsertData(
@@ -129,24 +130,35 @@ namespace FanficBE.Migrations
 
             migrationBuilder.InsertData(
                 table: "Posts",
-                columns: new[] { "Id", "CategoryId", "CommentId", "Content", "Title", "UserId" },
+                columns: new[] { "Id", "CategoryId", "Content", "Title", "UserId" },
                 values: new object[,]
                 {
-                    { 1, 1, null, "Content of post 1", "Post 1 Title", 1 },
-                    { 2, 2, null, "Content of post 2", "Post 2 Title", 2 },
-                    { 3, 3, null, "Content of post 3", "Post 3 Title", 3 },
-                    { 4, 4, null, "Content of post 4", "Post 4 Title", 4 }
+                    { 1, 1, "Content of post 1", "Post 1 Title", 1 },
+                    { 2, 2, "Content of post 2", "Post 2 Title", 2 },
+                    { 3, 3, "Content of post 3", "Post 3 Title", 3 },
+                    { 4, 4, "Content of post 4", "Post 4 Title", 4 }
                 });
 
             migrationBuilder.InsertData(
                 table: "Users",
-                columns: new[] { "Id", "Bio", "CommentId", "CreatedOn", "Email", "FirstName", "Image", "LastName", "PostId", "Staff", "Uid" },
+                columns: new[] { "Id", "Bio", "CreatedOn", "Email", "FirstName", "Image", "LastName", "PostId", "Staff", "Uid" },
                 values: new object[,]
                 {
-                    { 1, "Bio of user 1", null, new DateTime(2024, 4, 23, 16, 47, 35, 346, DateTimeKind.Local).AddTicks(1045), "john@example.com", "John", "image1.jpg", "Doe", null, false, "user1" },
-                    { 2, "Bio of user 2", null, new DateTime(2024, 4, 23, 16, 47, 35, 346, DateTimeKind.Local).AddTicks(1088), "jane@example.com", "Jane", "image2.jpg", "Doe", null, false, "user2" },
-                    { 3, "Bio of user 3", null, new DateTime(2024, 4, 23, 16, 47, 35, 346, DateTimeKind.Local).AddTicks(1091), "alex@example.com", "Alex", "image3.jpg", "Smith", null, false, "user3" },
-                    { 4, "Bio of user 4", null, new DateTime(2024, 4, 23, 16, 47, 35, 346, DateTimeKind.Local).AddTicks(1093), "emily@example.com", "Emily", "image4.jpg", "Johnson", null, false, "user4" }
+                    { 1, "Bio of user 1", new DateTime(2024, 4, 24, 18, 7, 5, 206, DateTimeKind.Local).AddTicks(1314), "john@example.com", "John", "image1.jpg", "Doe", null, false, "user1" },
+                    { 2, "Bio of user 2", new DateTime(2024, 4, 24, 18, 7, 5, 206, DateTimeKind.Local).AddTicks(1365), "jane@example.com", "Jane", "image2.jpg", "Doe", null, false, "user2" },
+                    { 3, "Bio of user 3", new DateTime(2024, 4, 24, 18, 7, 5, 206, DateTimeKind.Local).AddTicks(1367), "alex@example.com", "Alex", "image3.jpg", "Smith", null, false, "user3" },
+                    { 4, "Bio of user 4", new DateTime(2024, 4, 24, 18, 7, 5, 206, DateTimeKind.Local).AddTicks(1369), "emily@example.com", "Emily", "image4.jpg", "Johnson", null, false, "user4" }
+                });
+
+            migrationBuilder.InsertData(
+                table: "Comments",
+                columns: new[] { "Id", "Content", "CreatedOn", "PostId", "UserId" },
+                values: new object[,]
+                {
+                    { 1, "this is a comment!", new DateTime(2024, 4, 24, 18, 7, 5, 206, DateTimeKind.Local).AddTicks(1493), 1, 4 },
+                    { 2, "comment 2!", new DateTime(2024, 4, 24, 18, 7, 5, 206, DateTimeKind.Local).AddTicks(1487), 2, 3 },
+                    { 3, "a new comment, totally new", new DateTime(2024, 4, 24, 18, 7, 5, 206, DateTimeKind.Local).AddTicks(1489), 3, 2 },
+                    { 4, "this is also a comment", new DateTime(2024, 4, 24, 18, 7, 5, 206, DateTimeKind.Local).AddTicks(1491), 1, 1 }
                 });
 
             migrationBuilder.CreateIndex(
@@ -155,14 +167,14 @@ namespace FanficBE.Migrations
                 column: "PostsId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Posts_CommentId",
-                table: "Posts",
-                column: "CommentId");
+                name: "IX_Comments_PostId",
+                table: "Comments",
+                column: "PostId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Users_CommentId",
-                table: "Users",
-                column: "CommentId");
+                name: "IX_Comments_UserId",
+                table: "Comments",
+                column: "UserId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Users_PostId",
@@ -176,16 +188,16 @@ namespace FanficBE.Migrations
                 name: "CategoryPost");
 
             migrationBuilder.DropTable(
-                name: "Users");
+                name: "Comments");
 
             migrationBuilder.DropTable(
                 name: "Categories");
 
             migrationBuilder.DropTable(
-                name: "Posts");
+                name: "Users");
 
             migrationBuilder.DropTable(
-                name: "Comments");
+                name: "Posts");
         }
     }
 }
