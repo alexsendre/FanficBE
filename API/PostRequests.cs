@@ -27,11 +27,11 @@ namespace FanficBE.API
             app.MapDelete("/posts/{id}", (FanficBEDbContext db, int id) =>
             {
                 Post post = db.Posts.SingleOrDefault(c => c.Id == id);
-                if (post == null) 
+                if (post == null)
                 {
                     return Results.NotFound();
                 }
-                 db.Posts.Remove(post);
+                db.Posts.Remove(post);
                 db.SaveChanges();
                 return Results.NoContent();
             });
@@ -62,6 +62,19 @@ namespace FanficBE.API
             app.MapGet("/posts/category/{categoryId}", (FanficBEDbContext db, int categoryId) =>
             {
                 return db.Posts.Where(post => post.CategoryId == categoryId).ToList();
+            });
+
+            app.MapGet("/posts/search", (FanficBEDbContext db, string searchValue) =>
+            {
+                var searchResults = db.Posts
+                    .Where(post =>
+                        post.Title.ToLower().Contains(searchValue.ToLower()) ||
+                        post.Content.ToLower().Contains(searchValue.ToLower()) ||
+                        post.Categories.Any(category => category.Label.ToLower().Contains(searchValue.ToLower()))
+                    )
+                    .ToList();
+
+                return searchResults.Any() ? Results.Ok(searchResults) : Results.StatusCode(204);
             });
         }
     }
