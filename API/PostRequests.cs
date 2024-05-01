@@ -21,7 +21,33 @@ namespace FanficBE.API
 
             app.MapGet("/posts/{id}", (FanficBEDbContext db, int id) =>
             {
-                return db.Posts.Where(c => c.Id == id).FirstOrDefault();
+                return db.Posts
+                    .Where(p => p.Id == id)
+                    .Include(p => p.Users)
+                    .Include(p => p.Comments)
+                    .Include(p => p.Categories)
+                    .Select(p => new
+                    {
+                        p.Id,
+                        p.Title,
+                        p.Content,
+                        p.CategoryId,
+                        p.UserId,
+                        Users = p.Users.Select(u => new
+                        {
+                            u.Id,
+                            u.FirstName,
+                            u.LastName,
+                            u.Email,
+                            u.Bio
+                        }),
+                        Categories = p.Categories.Select(c => new
+                        {
+                            c.Id,
+                            c.Label,
+                        })
+                    });
+                
             });
 
             app.MapDelete("/posts/{id}", (FanficBEDbContext db, int id) =>
