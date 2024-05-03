@@ -36,25 +36,33 @@ namespace FanficBE.API
             });
 
             // add comment to post
-            app.MapPost("/posts/{postId}/comments", (FanficBEDbContext db, string comment, int postId, int userId) =>
+            app.MapPost("/posts/{postId}/comments", (FanficBEDbContext db, Comment newComment, int postId) =>
             {
-                if (comment == null)
+                var post = db.Posts.FirstOrDefault(p => p.Id == postId);
+                if (post == null)
                 {
-                    return Results.NotFound("You must type something to submit");
+                    return Results.NotFound("Unable to find post");
                 }
 
-                var response = new Comment
+                if (string.IsNullOrEmpty(newComment.Content))
+                {
+                    return Results.BadRequest("Comments cannot be empty");
+                }
+
+                var userId = newComment.UserId;
+                var comment = new Comment
                 {
                     PostId = postId,
                     UserId = userId,
-                    Content = comment,
+                    Content = newComment.Content,
+                    CreatedOn = DateTime.Now,
                 };
 
                 try
                 {
-                    db.Comments.Add(response);
+                    db.Comments.Add(comment);
                     db.SaveChanges();
-                    return Results.Created($"/posts/{postId}/comments/{response.Id}", response);
+                    return Results.Created($"/posts/{postId}/comments/{comment.Id}", comment);
                 }
                 catch (DbException ex)
                 {

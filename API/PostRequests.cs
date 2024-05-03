@@ -21,10 +21,9 @@ namespace FanficBE.API
 
             app.MapGet("/posts/{id}", (FanficBEDbContext db, int id) =>
             {
-                return db.Posts
+                 return db.Posts
                     .Where(p => p.Id == id)
                     .Include(p => p.Users)
-                    .Include(p => p.Comments)
                     .Include(p => p.Categories)
                     .Select(p => new
                     {
@@ -35,19 +34,18 @@ namespace FanficBE.API
                         p.UserId,
                         Users = p.Users.Select(u => new
                         {
-                            u.Id,
-                            u.FirstName,
-                            u.LastName,
-                            u.Email,
-                            u.Bio
+                            id = u.Id,
+                            firstName = u.FirstName,
+                            lastName = u.LastName,
+                            email = u.Email,
+                            bio = u.Bio
                         }),
                         Categories = p.Categories.Select(c => new
                         {
-                            c.Id,
-                            c.Label,
+                            id = c.Id,
+                            label = c.Label,
                         })
                     });
-                
             });
 
             app.MapDelete("/posts/{id}", (FanficBEDbContext db, int id) =>
