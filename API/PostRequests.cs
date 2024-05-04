@@ -9,7 +9,10 @@ namespace FanficBE.API
         {
             app.MapGet("/posts", (FanficBEDbContext db) =>
             {
-                return db.Posts.ToList();
+                return db.Posts
+                    .Include(p => p.Categories) 
+                    .Include(p => p.Comments) 
+                    .ToListAsync();
             });
 
             app.MapPost("/posts", (FanficBEDbContext db, Post post) =>
@@ -21,10 +24,10 @@ namespace FanficBE.API
 
             app.MapGet("/posts/{id}", (FanficBEDbContext db, int id) =>
             {
-                 return db.Posts
+                return db.Posts
                     .Where(p => p.Id == id)
-                    .Include(p => p.Users)
                     .Include(p => p.Categories)
+                    .Include(p => p.Comments)
                     .Select(p => new
                     {
                         p.Id,
@@ -32,20 +35,21 @@ namespace FanficBE.API
                         p.Content,
                         p.CategoryId,
                         p.UserId,
-                        Users = p.Users.Select(u => new
-                        {
-                            id = u.Id,
-                            firstName = u.FirstName,
-                            lastName = u.LastName,
-                            email = u.Email,
-                            bio = u.Bio
-                        }),
                         Categories = p.Categories.Select(c => new
                         {
                             id = c.Id,
                             label = c.Label,
+                        }),
+                        Comments = p.Comments.Select(comment => new
+                        {
+                            id = comment.Id,
+                            userId = comment.UserId,
+                            postId = comment.PostId,
+                            content = comment.Content,
+                            createdOn = comment.CreatedOn
                         })
-                    });
+                    })
+                    .SingleOrDefault(); 
             });
 
             app.MapDelete("/posts/{id}", (FanficBEDbContext db, int id) =>
@@ -88,53 +92,32 @@ namespace FanficBE.API
                 return db.Posts.Where(post => post.CategoryId == categoryId).ToList();
             });
 
-            app.MapGet("/search", (FanficBEDbContext db, string searchValue) =>
+            app.MapGet("/search", async (FanficBEDbContext db, string searchValue) =>
             {
-
                 if (string.IsNullOrWhiteSpace(searchValue))
                 {
                     return Results.BadRequest();
                 }
 
                 searchValue = searchValue.Trim();
-                var userResults = db.Users
-                    .Where(user =>
-                        user.FirstName.ToLower().Contains(searchValue.ToLower()) ||
-                        user.LastName.ToLower().Contains(searchValue.ToLower()) ||
-                        user.Email.ToLower().Contains(searchValue.ToLower()) ||
-                        user.Bio.ToLower().Contains(searchValue.ToLower())
-                    )
-                    .ToList();
 
-                var postResults = db.Posts
+                var postResults = await db.Posts
+                    .Include(post => post.User)
                     .Where(post =>
                         post.Title.ToLower().Contains(searchValue.ToLower()) ||
                         post.Content.ToLower().Contains(searchValue.ToLower()) ||
-                        post.Comments.Any(comment => comment.Content.ToLower().Contains(searchValue.ToLower()))
+                        post.Comments.Any(comment => comment.Content.ToLower().Contains(searchValue.ToLower())) ||
+                        post.User.FirstName.ToLower().Contains(searchValue.ToLower()) ||
+                        post.User.LastName.ToLower().Contains(searchValue.ToLower()) ||
+                        post.User.Email.ToLower().Contains(searchValue.ToLower()) ||
+                        post.User.Bio.ToLower().Contains(searchValue.ToLower()) ||
+                        post.Categories.Any(category => category.Label.ToLower().Contains(searchValue.ToLower()))
                     )
-                    .ToList();
+                    .Include(post => post.Categories)
+                    .Include(post => post.Comments)
+                    .ToListAsync();
 
-                var categoryResults = db.Categories
-                    .Where(category =>
-                        category.Label.ToLower().Contains(searchValue.ToLower())
-                    )
-                    .ToList();
-
-                var commentResults = db.Comments
-                    .Where(comment =>
-                        comment.Content.ToLower().Contains(searchValue.ToLower())
-                    )
-                    .ToList();
-
-                var searchResults = new
-                {
-                    Users = userResults,
-                    Posts = postResults,
-                    Categories = categoryResults,
-                    Comments = commentResults
-                };
-
-                return Results.Ok(searchResults);
+                return Results.Ok(postResults);
             });
         }
     }
