@@ -4,7 +4,8 @@
     {
         public int Id { get; set; }
         public int UserId { get; set; }
-        public User User { get; set; } // Navigation property for the associated user
+        public ICollection<User> Users { get; set; } // Navigation property for the associated user
+        public User User { get; set; }
         public string Title { get; set; }
         public string Content { get; set; }
         public int CategoryId { get; set; }

@@ -10,9 +10,7 @@ namespace FanficBE.API
             app.MapGet("/posts", (FanficBEDbContext db) =>
             {
                 return db.Posts
-                    .Include(p => p.Categories) 
-                    .Include(p => p.Comments) 
-                    .ToListAsync();
+                    .ToList();
             });
 
             app.MapPost("/posts", (FanficBEDbContext db, Post post) =>
@@ -25,31 +23,30 @@ namespace FanficBE.API
             app.MapGet("/posts/{id}", (FanficBEDbContext db, int id) =>
             {
                 return db.Posts
-                    .Where(p => p.Id == id)
-                    .Include(p => p.Categories)
-                    .Include(p => p.Comments)
-                    .Select(p => new
-                    {
-                        p.Id,
-                        p.Title,
-                        p.Content,
-                        p.CategoryId,
-                        p.UserId,
-                        Categories = p.Categories.Select(c => new
-                        {
-                            id = c.Id,
-                            label = c.Label,
-                        }),
-                        Comments = p.Comments.Select(comment => new
-                        {
-                            id = comment.Id,
-                            userId = comment.UserId,
-                            postId = comment.PostId,
-                            content = comment.Content,
-                            createdOn = comment.CreatedOn
-                        })
-                    })
-                    .SingleOrDefault(); 
+                   .Where(p => p.Id == id)
+                   .Include(p => p.Users)
+                   .Include(p => p.Categories)
+                   .Select(p => new
+                   {
+                       p.Id,
+                       p.Title,
+                       p.Content,
+                       p.CategoryId,
+                       p.UserId,
+                       Users = p.Users.Select(u => new
+                       {
+                           id = u.Id,
+                           firstName = u.FirstName,
+                           lastName = u.LastName,
+                           email = u.Email,
+                           bio = u.Bio
+                       }),
+                       Categories = p.Categories.Select(c => new
+                       {
+                           id = c.Id,
+                           label = c.Label,
+                       })
+                   });
             });
 
             app.MapDelete("/posts/{id}", (FanficBEDbContext db, int id) =>
