@@ -88,17 +88,53 @@ namespace FanficBE.API
                 return db.Posts.Where(post => post.CategoryId == categoryId).ToList();
             });
 
-            app.MapGet("/posts/search", (FanficBEDbContext db, string searchValue) =>
+            app.MapGet("/search", (FanficBEDbContext db, string searchValue) =>
             {
-                var searchResults = db.Posts
-                    .Where(post =>
-                        post.Title.ToLower().Contains(searchValue.ToLower()) ||
-                        post.Content.ToLower().Contains(searchValue.ToLower()) ||
-                        post.Categories.Any(category => category.Label.ToLower().Contains(searchValue.ToLower()))
+
+                if (string.IsNullOrWhiteSpace(searchValue))
+                {
+                    return Results.BadRequest();
+                }
+
+                searchValue = searchValue.Trim();
+                var userResults = db.Users
+                    .Where(user =>
+                        user.FirstName.ToLower().Contains(searchValue.ToLower()) ||
+                        user.LastName.ToLower().Contains(searchValue.ToLower()) ||
+                        user.Email.ToLower().Contains(searchValue.ToLower()) ||
+                        user.Bio.ToLower().Contains(searchValue.ToLower())
                     )
                     .ToList();
 
-                return searchResults.Any() ? Results.Ok(searchResults) : Results.StatusCode(204);
+                var postResults = db.Posts
+                    .Where(post =>
+                        post.Title.ToLower().Contains(searchValue.ToLower()) ||
+                        post.Content.ToLower().Contains(searchValue.ToLower()) ||
+                        post.Comments.Any(comment => comment.Content.ToLower().Contains(searchValue.ToLower()))
+                    )
+                    .ToList();
+
+                var categoryResults = db.Categories
+                    .Where(category =>
+                        category.Label.ToLower().Contains(searchValue.ToLower())
+                    )
+                    .ToList();
+
+                var commentResults = db.Comments
+                    .Where(comment =>
+                        comment.Content.ToLower().Contains(searchValue.ToLower())
+                    )
+                    .ToList();
+
+                var searchResults = new
+                {
+                    Users = userResults,
+                    Posts = postResults,
+                    Categories = categoryResults,
+                    Comments = commentResults
+                };
+
+                return Results.Ok(searchResults);
             });
         }
     }
